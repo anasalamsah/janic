@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unischoolity — JANIC AI Idea Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="page">
+    <a class="back-link" href="index.html">← Kembali ke JANIC AI Idea Lab</a>
+    <div class="page-meta">J-001 · diusulkan oleh Kayla, Aliza, Syifa</div>
+    <div id="tool"></div>
+  </div>
+</div>
+
+<script>
+async function callClaudeJSON(systemPrompt, userText){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000, system: systemPrompt, messages:[{role:"user", content:userText}] })
+  });
+  const data = await response.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+const UNI = (function(){
+  const QUESTIONS = [
+    { q:"Kalau dikasih waktu luang tanpa tugas, kamu paling suka...", opts:[
+      {t:"Ngoprek soal logika, matematika, atau teka-teki", w:{sains:2}},
+      {t:"Baca novel atau nulis cerita", w:{soshum:2}},
+      {t:"Gambar, desain, atau bikin musik", w:{seni:2}},
+      {t:"Ngobrol dan diskusi sama teman", w:{soshum:1, seni:1}} ]},
+    { q:"Pelajaran yang bikin kamu 'ngeh' paling cepat...", opts:[
+      {t:"Fisika atau Kimia", w:{sains:2}},
+      {t:"Sejarah, Sosiologi, atau Ekonomi", w:{soshum:2}},
+      {t:"Seni Budaya atau Prakarya", w:{seni:2}},
+      {t:"Bahasa Indonesia / Inggris", w:{soshum:1}} ]},
+    { q:"Kalau ada masalah, kamu lebih suka...", opts:[
+      {t:"Cari pola dan data buat nemuin solusi", w:{sains:2}},
+      {t:"Dengerin cerita orang, cari jalan tengah", w:{soshum:2}},
+      {t:"Coba ide baru yang di luar kebiasaan", w:{seni:2}} ]},
+    { q:"Proyek sekolah favoritmu...", opts:[
+      {t:"Eksperimen sains atau bikin alat", w:{sains:2}},
+      {t:"Presentasi, debat, atau karya tulis", w:{soshum:2}},
+      {t:"Poster, film pendek, atau desain", w:{seni:2}} ]},
+    { q:"Kalau lihat berita, kamu paling penasaran sama...", opts:[
+      {t:"Penemuan teknologi atau sains baru", w:{sains:2}},
+      {t:"Isu sosial, ekonomi, atau politik", w:{soshum:2}},
+      {t:"Tren desain, musik, atau film", w:{seni:2}} ]},
+    { q:"Cita-cita masa kecil kamu paling dekat ke...", opts:[
+      {t:"Dokter, insinyur, atau peneliti", w:{sains:2}},
+      {t:"Guru, pengacara, diplomat, atau pebisnis", w:{soshum:2}},
+      {t:"Seniman, desainer, musisi, atau atlet", w:{seni:2}} ]}
+  ];
+  let state, root;
+  function init(el){ root = el; state = { step:0, scores:{sains:0,soshum:0,seni:0}, kelas:'11' }; render(); }
+  function render(){
+    if(state.step < QUESTIONS.length){
+      const q = QUESTIONS[state.step];
+      root.innerHTML = `
+        <div class="theme-uni">
+          <div class="u-eyebrow"><span>Unischoolity</span><span>Pertanyaan ${state.step+1} / ${QUESTIONS.length}</span></div>
+          <div class="u-track"><div class="u-track-fill" style="width:${(state.step/QUESTIONS.length)*100}%"></div></div>
+          <div class="u-question">${q.q}</div>
+          <div>${q.opts.map((o,i)=>`<div class="u-option" onclick="UNI.answer(${i})"><div class="mark">${String.fromCharCode(65+i)}</div><div>${o.t}</div></div>`).join('')}</div>
+          ${state.step>0?`<button class="u-back" onclick="UNI.back()">← Kembali</button>`:''}
+        </div>`;
+    } else if(state.step === QUESTIONS.length){
+      root.innerHTML = `
+        <div class="theme-uni">
+          <div class="u-eyebrow"><span>Unischoolity</span><span>Langkah terakhir</span></div>
+          <div class="u-question" style="font-size:21px;">Kamu kelas berapa sekarang?</div>
+          <div class="u-kelas-row" id="u-kelas-group">
+            <div class="u-kelas ${state.kelas==='10'?'active':''}" onclick="UNI.setKelas(this,'10')">Kelas 10</div>
+            <div class="u-kelas ${state.kelas==='11'?'active':''}" onclick="UNI.setKelas(this,'11')">Kelas 11</div>
+            <div class="u-kelas ${state.kelas==='12'?'active':''}" onclick="UNI.setKelas(this,'12')">Kelas 12</div>
+          </div>
+          <button class="u-run" onclick="UNI.finish()">Lihat hasil rekomendasi</button>
+          <button class="u-back" onclick="UNI.back()">← Kembali</button>
+          <div class="loading" id="u-loading" style="color:#8b897d;">Menyusun rekomendasi berdasarkan 6 jawabanmu…</div>
+        </div>`;
+    }
+  }
+  function setKelas(btn, v){ state.kelas = v; document.querySelectorAll('#u-kelas-group .u-kelas').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function answer(i){ const w = QUESTIONS[state.step].opts[i].w; for(const k in w) state.scores[k]+=w[k]; state.step++; render(); }
+  function back(){ state.step = Math.max(0, state.step-1); render(); }
+  async function finish(){
+    const loading = document.getElementById('u-loading');
+    loading.className = 'loading show';
+    const total = state.scores.sains+state.scores.soshum+state.scores.seni || 1;
+    const pct = { sains: Math.round(state.scores.sains/total*100), soshum: Math.round(state.scores.soshum/total*100), seni: Math.round(state.scores.seni/total*100) };
+    try{
+      const sys = "Kamu konselor karir sekolah untuk siswa SMA Indonesia. Berdasarkan persentase kecenderungan siswa (sains/soshum/seni) dan kelasnya, balas HANYA dengan JSON valid tanpa teks lain, format persis: {\"ringkasan\":\"1-2 kalimat hangat menjelaskan kecenderungan siswa\",\"jurusan\":[{\"nama\":\"...\",\"alasan\":\"1 kalimat singkat\"}] (tepat 3 item),\"kampus\":[{\"nama\":\"...\",\"fakultas\":\"...\"}] (isi 2 item HANYA jika kelas 12, kalau bukan kelas 12 buat array kosong)}. Selalu ingatkan lewat kalimat ringkasan bahwa ini titik awal diskusi.";
+      const out = await callClaudeJSON(sys, `Sains ${pct.sains}%, Soshum ${pct.soshum}%, Seni/Vokasi ${pct.seni}%. Kelas: ${state.kelas}.`);
+      renderReport(pct, out);
+    }catch(e){ loading.textContent = "Gagal memuat rekomendasi. Coba lagi."; }
+  }
+  function renderReport(pct, out){
+    root.innerHTML = `
+      <div class="theme-uni">
+        <div class="u-eyebrow"><span>Unischoolity</span><span>Hasil kamu</span></div>
+        <div class="u-lede">"${out.ringkasan}"</div>
+        <div class="u-axis"><div class="u-axis-label"><span>Saintek</span><span>${pct.sains}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.sains}%"></div></div></div>
+        <div class="u-axis"><div class="u-axis-label"><span>Soshum</span><span>${pct.soshum}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.soshum}%"></div></div></div>
+        <div class="u-axis"><div class="u-axis-label"><span>Seni / Vokasi</span><span>${pct.seni}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.seni}%"></div></div></div>
+        <div class="u-kicker">Rekomendasi jurusan</div>
+        <div>${out.jurusan.map((j,i)=>`<div class="u-list-item"><div class="u-list-num">0${i+1}</div><div><h5>${j.nama}</h5><p>${j.alasan}</p></div></div>`).join('')}</div>
+        ${out.kampus && out.kampus.length ? `<div class="u-kicker">Contoh kampus (kelas 12)</div><div>${out.kampus.map((k,i)=>`<div class="u-list-item"><div class="u-list-num">0${i+1}</div><div><h5>${k.nama}</h5><p>${k.fakultas}</p></div></div>`).join('')}</div>` : ''}
+        <div class="u-note">Titik awal diskusi, bukan keputusan final — obrolkan lagi dengan guru BK atau orang tua.</div>
+        <button class="u-again" onclick="UNI.init(root)">↻ Ulangi tes</button>
+      </div>`;
+  }
+  return { init, answer, back, finish, setKelas };
+})();
+
+UNI.init(document.getElementById('tool'));
+</script>
+</body>
+</html>

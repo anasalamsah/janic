@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Eksperimen Alam — JANIC AI Idea Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="page">
+    <a class="back-link" href="index.html">← Kembali ke JANIC AI Idea Lab</a>
+    <div class="page-meta">J-002 · diusulkan oleh Rian, Farhamanta, Abzari, Naufal</div>
+    <div id="tool"></div>
+  </div>
+</div>
+
+<script>
+async function callClaudeJSON(systemPrompt, userText){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000, system: systemPrompt, messages:[{role:"user", content:userText}] })
+  });
+  const data = await response.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+const GAME = (function(){
+  let state, root;
+  function init(el){ root = el; state = { subject:'Fisika', level:'SMA', round:0, score:0, streak:0, current:null, answered:false }; renderStart(); }
+  function renderStart(){
+    root.innerHTML = `
+      <div class="theme-lab">
+        <div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>SYS.READY</span></div>
+        <div class="l-sub">5 ronde tantangan hipotesis. Pilih bidang & tingkat, lalu mulai.</div>
+        <div class="l-field-label">Bidang eksperimen</div>
+        <div class="l-toggle-row" id="l-subj-group">
+          <button class="l-toggle active" onclick="GAME.setSubject(this,'Fisika')">Fisika</button>
+          <button class="l-toggle" onclick="GAME.setSubject(this,'Kimia')">Kimia</button>
+          <button class="l-toggle" onclick="GAME.setSubject(this,'Biologi')">Biologi</button>
+        </div>
+        <div class="l-field-label">Tingkat</div>
+        <div class="l-toggle-row" id="l-lvl-group">
+          <button class="l-toggle" onclick="GAME.setLevel(this,'SMP')">SMP</button>
+          <button class="l-toggle active" onclick="GAME.setLevel(this,'SMA')">SMA</button>
+        </div>
+        <button class="l-run" onclick="GAME.start()">▶ mulai tantangan</button>
+        <div class="loading" id="l-loading" style="color:#5f9c8f;">Menyiapkan skenario eksperimen…</div>
+      </div>`;
+  }
+  function setSubject(btn,v){ state.subject=v; document.querySelectorAll('#l-subj-group .l-toggle').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function setLevel(btn,v){ state.level=v; document.querySelectorAll('#l-lvl-group .l-toggle').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  async function start(){ state.round=0; state.score=0; state.streak=0; await nextRound(); }
+  async function nextRound(){
+    root.innerHTML = `<div class="theme-lab"><div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>LOADING</span></div><div class="loading show" style="color:#5f9c8f;">Menyiapkan skenario eksperimen…</div></div>`;
+    try{
+      const sys = "Kamu pembuat tantangan sains untuk game edukasi siswa Indonesia. Balas HANYA dengan JSON valid, format persis: {\"skenario\":\"2-3 kalimat deskripsi eksperimen yang seru\",\"opsi\":[{\"id\":\"a\",\"teks\":\"...\"},{\"id\":\"b\",\"teks\":\"...\"},{\"id\":\"c\",\"teks\":\"...\"}],\"benar\":\"a atau b atau c\",\"penjelasan\":\"2-3 kalimat penjelasan ilmiah kenapa itu jawabannya\"}. Jangan ulangi skenario yang mirip antar ronde.";
+      const out = await callClaudeJSON(sys, `Bidang: ${state.subject}\nJenjang: ${state.level}\nRonde ke: ${state.round+1}`);
+      state.current = out; state.answered = false;
+      renderRound();
+    }catch(e){ root.innerHTML = `<div class="theme-lab"><div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>ERROR</span></div><div style="color:#f0a19c; font-size:12.5px;">Gagal memuat tantangan.</div><button class="l-run" style="margin-top:14px;" onclick="GAME.nextRoundPublic()">coba lagi</button></div>`; }
+  }
+  function renderRound(){
+    const c = state.current;
+    root.innerHTML = `
+      <div class="theme-lab">
+        <div class="l-top"><span>${state.subject.toUpperCase()} · ${state.level}</span><span>ROUND ${state.round+1}/5</span></div>
+        <div class="l-hud"><div><b>${state.score}</b>SCORE</div><div><b>${state.streak}</b>STREAK</div></div>
+        <div class="l-scenario">${c.skenario}</div>
+        <div id="l-options">${c.opsi.map((o,i)=>`<button class="l-option" onclick="GAME.pick('${o.id}', this)">${String.fromCharCode(65+i)}) ${o.teks}</button>`).join('')}</div>
+        <div class="l-explain" id="l-explain" style="display:none;"></div>
+        <div id="l-next"></div>
+      </div>`;
+  }
+  function pick(id, btn){
+    if(state.answered) return;
+    state.answered = true;
+    const c = state.current;
+    const buttons = document.querySelectorAll('#l-options .l-option');
+    buttons.forEach(b=>b.disabled=true);
+    const correct = id === c.benar;
+    btn.classList.add(correct?'correct':'incorrect');
+    if(!correct){ buttons[c.opsi.findIndex(o=>o.id===c.benar)].classList.add('correct'); }
+    if(correct){ state.score += 10 + state.streak*2; state.streak++; } else { state.streak = 0; }
+    root.querySelector('.l-hud').innerHTML = `<div><b>${state.score}</b>SCORE</div><div><b>${state.streak}</b>STREAK</div>`;
+    const explain = document.getElementById('l-explain');
+    explain.textContent = c.penjelasan; explain.style.display = 'block';
+    state.round++;
+    const nextWrap = document.getElementById('l-next');
+    if(state.round < 5){ nextWrap.innerHTML = `<button class="l-run" onclick="GAME.nextRoundPublic()">▶ tantangan berikutnya</button>`; }
+    else { nextWrap.innerHTML = `<div class="l-final">SELESAI. SKOR AKHIR: ${state.score} POIN / 5 RONDE.</div><button class="l-again" onclick="GAME.init(root)">↻ main lagi</button>`; }
+  }
+  function nextRoundPublic(){ nextRound(); }
+  return { init, start, pick, setSubject, setLevel, nextRoundPublic };
+})();
+
+GAME.init(document.getElementById('tool'));
+</script>
+</body>
+</html>
