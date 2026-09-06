@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -5,48 +6,463 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JANIC AI Idea Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0d0e12; --surface:#16181f; --surface-2:#1d2029;
+    --line:#26282f; --line-soft:#1c1e25;
+    --ink:#eeeef2; --ink-dim:#9a9ba8; --ink-faint:#5f606c;
+    --violet:#8b6df2; --violet-dim:#2c2547;
+    --teal:#45b6ac; --teal-dim:#173432;
+    --pink:#e08fb0; --pink-dim:#3a2430;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:'Fraunces',serif; font-weight:500; }
+  .wrap{ max-width:920px; margin:0 auto; padding:0 24px; }
+  button{ font-family:'Inter',sans-serif; }
+
+  /* ---- HOME ---- */
+  #home.hide, .page{ display:none; }
+  #home.show, .page.show{ display:block; }
+
+  .hero{ padding:96px 0 48px; }
+  .kicker{ font-size:12px; letter-spacing:0.14em; color:var(--ink-faint); text-transform:uppercase; margin:0 0 20px; }
+  .hero h1{ font-size:50px; line-height:1.05; margin:0 0 20px; letter-spacing:-0.01em; }
+  .hero p.lede{ font-size:17px; line-height:1.65; color:var(--ink-dim); max-width:540px; margin:0 0 44px; }
+  .stats-clean{ display:flex; align-items:center; gap:0; flex-wrap:wrap; row-gap:16px; }
+  .stat-clean{ padding-right:32px; margin-right:32px; border-right:1px solid var(--line-soft); }
+  .stat-clean:last-child{ border-right:none; margin-right:0; padding-right:0; }
+  .stat-clean .num{ font-family:'Fraunces',serif; font-size:26px; display:block; }
+  .stat-clean .num small{ font-size:14px; color:var(--ink-faint); font-family:'Inter',sans-serif; }
+  .stat-clean .label{ font-size:12px; color:var(--ink-faint); margin-top:2px; }
+  @media (max-width:640px){ .hero h1{font-size:36px;} }
+
+  .section{ padding:12px 0 64px; }
+  .section-head{ margin-bottom:26px; }
+  .section-head h2{ font-size:23px; margin:0 0 6px; }
+  .section-head p{ font-size:13px; color:var(--ink-faint); margin:0; }
+
+  .icon-badge{ width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .icon-badge svg{ width:20px; height:20px; }
+  .icon-badge.lg{ width:60px; height:60px; border-radius:16px; } .icon-badge.lg svg{ width:30px; height:30px; }
+  .acc-violet{ background:var(--violet-dim); color:#c3b3fb; }
+  .acc-teal{ background:var(--teal-dim); color:#9fe3dc; }
+  .acc-pink{ background:var(--pink-dim); color:#f3bdd5; }
+
+  /* ---- TILE GRID: judul + icon saja ---- */
+  .tile-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:720px){ .tile-grid{ grid-template-columns:1fr; } }
+  .tile{ background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:40px 20px; display:flex; flex-direction:column; align-items:center; gap:14px; cursor:pointer; text-align:center; transition:border-color .15s ease, transform .12s ease; }
+  .tile:hover{ border-color:var(--ink-faint); transform:translateY(-2px); }
+  .tile h3{ font-size:17px; margin:0; line-height:1.3; }
+  .tile .tag-line{ font-size:12px; color:var(--ink-faint); margin-top:-6px; }
+
+  footer{ padding:36px 0 60px; text-align:center; color:var(--ink-faint); font-size:12.5px; line-height:1.7; border-top:1px solid var(--line-soft); margin-top:20px; }
+  footer .highlight{ color:var(--ink-dim); }
+
+  /* ---- PAGE CHROME (shared across every prototype page) ---- */
+  .page{ padding:56px 0 60px; }
+  .back-link{ background:none; border:none; color:var(--ink-dim); font-size:13px; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:6px; }
+  .back-link:hover{ color:var(--ink); }
+  .page-meta{ font-size:12.5px; color:var(--ink-faint); margin-top:18px; }
+  .page-note{ font-size:12px; color:var(--ink-faint); margin-top:5px; max-width:540px; line-height:1.55; }
+  .loading{ font-size:13px; margin-top:14px; display:none; }
+  .loading.show{ display:block; }
+
+  /* ================= THEME: UNISCHOOLITY — diagnostic report ================= */
+  .theme-uni{ background:#f7f5f0; color:#161513; border-radius:20px; padding:44px 46px; margin-top:26px; }
+  .theme-uni .u-eyebrow{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#8b897d; margin-bottom:30px; display:flex; justify-content:space-between; }
+  .theme-uni .u-track{ height:2px; background:#e4e1d8; margin-bottom:36px; position:relative; }
+  .theme-uni .u-track-fill{ height:2px; background:#2c2a86; position:absolute; left:0; top:0; transition:width .3s ease; }
+  .theme-uni .u-question{ font-family:'Fraunces',serif; font-size:26px; line-height:1.35; margin-bottom:28px; max-width:500px; }
+  .theme-uni .u-option{ display:flex; align-items:center; gap:14px; padding:16px 4px; border-bottom:1px solid #e4e1d8; cursor:pointer; font-size:15px; color:#2c2b28; }
+  .theme-uni .u-option:hover{ background:#efece3; }
+  .theme-uni .u-option .mark{ width:26px; height:26px; border-radius:50%; border:1px solid #b8b5a8; display:flex; align-items:center; justify-content:center; font-size:11px; color:#8b897d; flex-shrink:0; }
+  .theme-uni .u-back{ margin-top:20px; background:none; border:none; color:#8b897d; font-size:13px; cursor:pointer; }
+  .theme-uni .u-kelas-row{ display:flex; gap:10px; margin:24px 0 30px; }
+  .theme-uni .u-kelas{ flex:1; border:1px solid #d8d5c8; background:#fff; border-radius:10px; padding:16px 8px; text-align:center; font-size:13.5px; color:#8b897d; cursor:pointer; }
+  .theme-uni .u-kelas.active{ border-color:#2c2a86; color:#2c2a86; background:#eeedfb; }
+  .theme-uni .u-run{ background:#1c1a17; color:#f7f5f0; border:none; border-radius:9px; padding:13px 26px; font-size:14px; font-weight:600; cursor:pointer; }
+  .theme-uni .u-lede{ font-size:16px; line-height:1.7; margin-bottom:30px; font-family:'Fraunces',serif; font-style:italic; color:#2c2b28; }
+  .theme-uni .u-axis{ margin-bottom:18px; }
+  .theme-uni .u-axis-label{ display:flex; justify-content:space-between; font-size:12.5px; color:#8b897d; margin-bottom:7px; }
+  .theme-uni .u-axis-track{ height:2px; background:#e4e1d8; }
+  .theme-uni .u-axis-fill{ height:2px; background:#2c2a86; }
+  .theme-uni .u-list-item{ display:flex; gap:18px; padding:17px 0; border-top:1px solid #e4e1d8; }
+  .theme-uni .u-list-item:last-child{ border-bottom:1px solid #e4e1d8; }
+  .theme-uni .u-list-num{ font-family:'Fraunces',serif; font-size:19px; color:#b8b5a8; width:26px; flex-shrink:0; }
+  .theme-uni .u-list-item h5{ margin:0 0 4px; font-size:15px; font-weight:600; }
+  .theme-uni .u-list-item p{ margin:0; font-size:13px; color:#8b897d; line-height:1.55; }
+  .theme-uni .u-kicker{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#8b897d; margin:28px 0 4px; }
+  .theme-uni .u-note{ font-size:12.5px; color:#8b897d; margin-top:24px; line-height:1.6; border-top:1px solid #e4e1d8; padding-top:18px; }
+  .theme-uni .u-again{ margin-top:16px; background:none; border:none; color:#8b897d; font-size:13px; cursor:pointer; }
+
+  /* ================= THEME: LAB EKSPERIMEN ALAM — console ================= */
+  .theme-lab{ background:#07080a; border:1px solid #1c2a24; border-radius:6px; padding:32px 34px; margin-top:26px; font-family:'Space Mono',monospace; color:#c9f7e6;
+    background-image:radial-gradient(rgba(69,182,172,.1) 1px, transparent 1px); background-size:16px 16px; }
+  .theme-lab .l-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; font-size:11px; letter-spacing:.06em; color:#3fd8b8; text-transform:uppercase; }
+  .theme-lab .l-sub{ font-size:12px; color:#5f9c8f; margin-bottom:10px; line-height:1.6; }
+  .theme-lab .l-field-label{ font-size:11px; color:#5f9c8f; letter-spacing:.06em; text-transform:uppercase; margin-bottom:9px; margin-top:22px; }
+  .theme-lab .l-toggle-row{ display:flex; border:1px solid #1c2a24; margin-bottom:20px; }
+  .theme-lab .l-toggle{ flex:1; background:none; border:none; border-right:1px solid #1c2a24; color:#5f9c8f; font-family:'Space Mono',monospace; font-size:12px; padding:11px 6px; cursor:pointer; text-transform:uppercase; letter-spacing:.03em; }
+  .theme-lab .l-toggle:last-child{ border-right:none; }
+  .theme-lab .l-toggle.active{ background:#3fd8b8; color:#07080a; }
+  .theme-lab .l-run{ background:#3fd8b8; color:#07080a; border:none; border-radius:2px; padding:12px 22px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:.04em; margin-top:6px; }
+  .theme-lab .l-hud{ display:flex; border:1px solid #1c2a24; margin-bottom:18px; }
+  .theme-lab .l-hud div{ flex:1; text-align:center; padding:10px 4px; border-right:1px solid #1c2a24; font-size:10.5px; color:#5f9c8f; text-transform:uppercase; letter-spacing:.04em; }
+  .theme-lab .l-hud div:last-child{ border-right:none; }
+  .theme-lab .l-hud b{ display:block; font-size:17px; color:#3fd8b8; margin-bottom:2px; }
+  .theme-lab .l-scenario{ border:1px solid #1c2a24; padding:15px 17px; font-size:13px; line-height:1.7; margin-bottom:16px; color:#e2fbf1; }
+  .theme-lab .l-scenario:before{ content:"> "; color:#3fd8b8; }
+  .theme-lab .l-option{ display:block; width:100%; text-align:left; background:none; border:1px solid #1c2a24; color:#c9f7e6; padding:12px 15px; font-size:12.5px; font-family:'Space Mono',monospace; cursor:pointer; margin-bottom:8px; border-radius:2px; }
+  .theme-lab .l-option:hover:not(:disabled){ border-color:#3fd8b8; }
+  .theme-lab .l-option.correct{ border-color:#3fd8b8; background:rgba(63,216,184,.12); color:#3fd8b8; }
+  .theme-lab .l-option.incorrect{ border-color:#e2665f; background:rgba(226,102,95,.1); color:#f0a19c; }
+  .theme-lab .l-explain{ font-size:12px; color:#5f9c8f; line-height:1.65; margin:12px 0 16px; }
+  .theme-lab .l-explain:before{ content:">> "; color:#3fd8b8; }
+  .theme-lab .l-final{ border:1px solid #3fd8b8; padding:15px 17px; font-size:12.5px; margin-top:8px; color:#e2fbf1; }
+  .theme-lab .l-again{ margin-top:14px; background:none; border:none; color:#5f9c8f; font-size:11.5px; cursor:pointer; text-transform:uppercase; letter-spacing:.04em; font-family:'Space Mono',monospace; }
+
+  /* ================= THEME: A PEACE FROM HEART — calm journal ================= */
+  .theme-peace{ background:#faf4ef; border-radius:28px; padding:48px 44px; margin-top:26px; color:#3a2a2f; }
+  .theme-peace .p-eyebrow{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#b98ea3; margin-bottom:22px; text-align:center; }
+  .theme-peace .p-disclaimer{ font-size:12px; color:#8f7a80; text-align:center; line-height:1.6; margin-bottom:34px; }
+  .theme-peace .p-q{ font-family:'Fraunces',serif; font-style:italic; font-size:19px; line-height:1.6; text-align:center; margin-bottom:20px; color:#3a2a2f; }
+  .theme-peace .p-mood-row{ display:flex; justify-content:center; gap:12px; margin-bottom:36px; flex-wrap:wrap; }
+  .theme-peace .p-mood{ width:56px; height:56px; border-radius:50%; border:1px solid #e3cdd6; background:none; cursor:pointer; font-size:10px; color:#8f7a80; display:flex; align-items:center; justify-content:center; text-align:center; line-height:1.15; padding:4px; }
+  .theme-peace .p-mood.selected{ background:#e0a9bf; border-color:#e0a9bf; color:#fff; }
+  .theme-peace .p-tag-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin-bottom:36px; }
+  .theme-peace .p-tag{ border:1px solid #e3cdd6; background:none; border-radius:100px; padding:8px 15px; font-size:12px; color:#8f7a80; cursor:pointer; }
+  .theme-peace .p-tag.selected{ background:#f3dde6; border-color:#e0a9bf; color:#7a4a5e; }
+  .theme-peace .p-textarea{ width:100%; background:none; border:none; border-bottom:1px solid #e3cdd6; text-align:center; font-family:'Fraunces',serif; font-style:italic; font-size:16px; color:#3a2a2f; padding:10px 4px 16px; margin-bottom:28px; resize:none; }
+  .theme-peace .p-textarea:focus{ outline:none; border-bottom-color:#e0a9bf; }
+  .theme-peace .p-send{ display:block; margin:0 auto; background:#e0a9bf; color:#fff; border:none; border-radius:100px; padding:13px 30px; font-size:13.5px; font-weight:600; cursor:pointer; }
+  .theme-peace .p-err{ text-align:center; font-size:12px; color:#c96a6a; margin-bottom:16px; }
+  .theme-peace .p-reflection{ font-family:'Fraunces',serif; font-style:italic; font-size:17px; line-height:1.85; text-align:center; color:#3a2a2f; margin:0 auto 22px; max-width:440px; }
+  .theme-peace .p-closing{ font-size:12.5px; color:#8f7a80; text-align:center; line-height:1.7; margin-bottom:8px; }
+  .theme-peace .p-again{ display:block; margin:20px auto 0; background:none; border:none; color:#b98ea3; font-size:12.5px; cursor:pointer; }
+</style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="hero">
-    <p class="kicker">JANIC · Bandar Lampung</p>
-    <h1>JANIC AI Idea Lab</h1>
-    <p class="lede">From student ideas to AI prototypes. Apa yang terjadi kalau siswa tidak hanya belajar tentang AI, tapi memakainya untuk membangun sesuatu milik mereka sendiri?</p>
-    <div class="stats-clean">
-      <div class="stat-clean"><span class="num">3<small> / 100</small></span><span class="label">ide terisi</span></div>
-      <div class="stat-clean"><span class="num">3</span><span class="label">prototype interaktif</span></div>
-      <div class="stat-clean"><span class="num">1</span><span class="label">ide unggulan</span></div>
+
+  <div id="home" class="show">
+    <div class="hero">
+      <p class="kicker">JANIC · Bandar Lampung</p>
+      <h1>JANIC AI Idea Lab</h1>
+      <p class="lede">From student ideas to AI prototypes. Apa yang terjadi kalau siswa tidak hanya belajar tentang AI, tapi memakainya untuk membangun sesuatu milik mereka sendiri?</p>
+      <div class="stats-clean">
+        <div class="stat-clean"><span class="num">3<small> / 100</small></span><span class="label">ide terisi</span></div>
+        <div class="stat-clean"><span class="num">3</span><span class="label">prototype interaktif</span></div>
+        <div class="stat-clean"><span class="num">1</span><span class="label">ide unggulan</span></div>
+      </div>
     </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Jelajahi ide siswa</h2>
+        <p>97 slot lain di database masih kosong — katalog otomatis bertambah begitu ide baru diisi.</p>
+      </div>
+      <div class="tile-grid" id="tileGrid"></div>
+    </div>
+    <footer>
+      Data sumber: <span class="highlight">JANIC_AI_Idea_Database_Template.xlsx</span> — sheet IDEA INPUT.
+    </footer>
   </div>
-  <div class="section">
-    <div class="section-head">
-      <h2>Jelajahi ide siswa</h2>
-      <p>97 slot lain di database masih kosong — katalog otomatis bertambah begitu ide baru diisi. Setiap prototype terbuka di tab baru.</p>
-    </div>
-    <div class="tile-grid">
-      <a class="tile" href="unischoolity.html" target="_blank" rel="noopener">
-        <div class="icon-badge lg acc-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 5-5 2 2-5z"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg></div>
-        <h3>Unischoolity</h3>
-        <div class="tag-line">Tes minat & jurusan</div>
-        <div class="new-tab-hint">↗ buka di tab baru</div>
-      </a>
-      <a class="tile" href="lab.html" target="_blank" rel="noopener">
-        <div class="icon-badge lg acc-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5M10 3v6.2L5.3 18a1.8 1.8 0 0 0 1.6 2.6h10.2A1.8 1.8 0 0 0 18.7 18L14 9.2V3"/><path d="M8 15h8"/><circle cx="10" cy="17.3" r="0.6" fill="currentColor" stroke="none"/><circle cx="13.2" cy="18.2" r="0.5" fill="currentColor" stroke="none"/></svg></div>
-        <h3>Lab Eksperimen Alam</h3>
-        <div class="tag-line">Simulasi eksperimen</div>
-        <div class="new-tab-hint">↗ buka di tab baru</div>
-      </a>
-      <a class="tile" href="peace.html" target="_blank" rel="noopener">
-        <div class="icon-badge lg acc-pink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="2.3"/><path d="M12 4.3c1.3 2.2 1.3 3.7 0 5.4M12 19.7c1.3-2.2 1.3-3.7 0-5.4M4.3 12c2.2-1.3 3.7-1.3 5.4 0M19.7 12c-2.2 1.3-3.7 1.3-5.4 0"/></svg></div>
-        <h3>A Peace From Heart</h3>
-        <div class="tag-line">Ruang refleksi</div>
-        <div class="new-tab-hint">↗ buka di tab baru</div>
-      </a>
-    </div>
-  </div>
-  <footer>Data sumber: <span class="highlight">JANIC_AI_Idea_Database_Template.xlsx</span> — sheet IDEA INPUT.</footer>
+
+  <div class="page" id="page-unischoolity"></div>
+  <div class="page" id="page-labgame"></div>
+  <div class="page" id="page-peace"></div>
+
 </div>
+
+<script>
+const ICONS = {
+  compass: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M15 9l-2 5-5 2 2-5z"/><circle cx="12" cy="12" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  flask: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5M10 3v6.2L5.3 18a1.8 1.8 0 0 0 1.6 2.6h10.2A1.8 1.8 0 0 0 18.7 18L14 9.2V3"/><path d="M8 15h8"/><circle cx="10" cy="17.3" r="0.6" fill="currentColor" stroke="none"/><circle cx="13.2" cy="18.2" r="0.5" fill="currentColor" stroke="none"/></svg>',
+  calm: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="2.3"/><path d="M12 4.3c1.3 2.2 1.3 3.7 0 5.4M12 19.7c1.3-2.2 1.3-3.7 0-5.4M4.3 12c2.2-1.3 3.7-1.3 5.4 0M19.7 12c-2.2 1.3-3.7 1.3-5.4 0"/></svg>'
+};
+
+const IDEAS = [
+  { id:"J-001", aiName:"Unischoolity", students:"Kayla, Aliza, Syifa", icon:"compass", accent:"violet", protoLabel:"Tes minat & jurusan",
+    problem:"Masih banyak anak SMA yang masih kebingungan memilih jurusan atau kampus yang diminati untuk kuliah.",
+    aiOpportunity:"AI sebagai mesin rekomendasi & penjelas: menganalisis pola jawaban minat/bakat, lalu menyusun rekomendasi jurusan dalam bahasa yang mudah dipahami.",
+    safety:null, proto:"unischoolity" },
+  { id:"J-002", aiName:"Lab Eksperimen Alam", students:"Rian, Farhamanta, Abzari, Naufal", icon:"flask", accent:"teal", protoLabel:"Simulasi eksperimen",
+    problem:"Tidak adanya laboratorium untuk melakukan penelitian fisika, kimia, dan biologi secara lengkap.",
+    aiOpportunity:"AI sebagai penyusun tantangan dinamis dan pemberi umpan balik atas hipotesis siswa.",
+    safety:null, proto:"labgame" },
+  { id:"J-003", aiName:"A Peace From Heart", students:"Anonymus", icon:"calm", accent:"pink", protoLabel:"Ruang refleksi",
+    problem:"Banyak remaja memendam masalah tanpa tempat bercerita, dan berisiko stres atau frustrasi.",
+    aiOpportunity:"AI sebagai teman menulis reflektif: memvalidasi perasaan dan mendorong bicara dengan orang tepercaya.",
+    safety:"Prototype ini BUKAN alat terapi, diagnosis, atau layanan krisis — hanya latihan menulis reflektif ringan, tanpa histori percakapan tersimpan.",
+    proto:"peace" }
+];
+
+function renderTiles(){
+  document.getElementById('tileGrid').innerHTML = IDEAS.map(idea => `
+    <div class="tile" onclick="openPage('${idea.proto}')">
+      <div class="icon-badge lg acc-${idea.accent}">${ICONS[idea.icon]}</div>
+      <h3>${idea.aiName}</h3>
+      <div class="tag-line">${idea.protoLabel}</div>
+    </div>
+  `).join('');
+}
+
+function goHome(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  document.getElementById('home').classList.add('show');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function openPage(key){
+  document.getElementById('home').classList.remove('show');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('show'));
+  const pageEl = document.getElementById('page-'+key);
+  pageEl.classList.add('show');
+  const idea = IDEAS.find(i=>i.proto===key);
+  if(pageEl.dataset.inited !== '1'){
+    pageEl.dataset.inited = '1';
+    pageEl.innerHTML = `
+      <button class="back-link" onclick="goHome()">← Kembali ke JANIC AI Idea Lab</button>
+      <div class="page-meta">${idea.id} · diusulkan oleh ${idea.students}</div>
+      ${idea.safety ? `<div class="page-note">${idea.safety}</div>` : ''}
+      <div id="tool-${key}"></div>
+    `;
+    const toolRoot = document.getElementById('tool-'+key);
+    if(key==='unischoolity') UNI.init(toolRoot, idea);
+    if(key==='labgame') GAME.init(toolRoot, idea);
+    if(key==='peace') PEACE.init(toolRoot);
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function callClaudeJSON(systemPrompt, userText){
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:1000, system: systemPrompt, messages:[{role:"user", content:userText}] })
+  });
+  const data = await response.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  const clean = text.replace(/```json|```/g,'').trim();
+  return JSON.parse(clean);
+}
+
+/* ============ UNISCHOOLITY — diagnostic report theme ============ */
+const UNI = (function(){
+  const QUESTIONS = [
+    { q:"Kalau dikasih waktu luang tanpa tugas, kamu paling suka...", opts:[
+      {t:"Ngoprek soal logika, matematika, atau teka-teki", w:{sains:2}},
+      {t:"Baca novel atau nulis cerita", w:{soshum:2}},
+      {t:"Gambar, desain, atau bikin musik", w:{seni:2}},
+      {t:"Ngobrol dan diskusi sama teman", w:{soshum:1, seni:1}} ]},
+    { q:"Pelajaran yang bikin kamu 'ngeh' paling cepat...", opts:[
+      {t:"Fisika atau Kimia", w:{sains:2}},
+      {t:"Sejarah, Sosiologi, atau Ekonomi", w:{soshum:2}},
+      {t:"Seni Budaya atau Prakarya", w:{seni:2}},
+      {t:"Bahasa Indonesia / Inggris", w:{soshum:1}} ]},
+    { q:"Kalau ada masalah, kamu lebih suka...", opts:[
+      {t:"Cari pola dan data buat nemuin solusi", w:{sains:2}},
+      {t:"Dengerin cerita orang, cari jalan tengah", w:{soshum:2}},
+      {t:"Coba ide baru yang di luar kebiasaan", w:{seni:2}} ]},
+    { q:"Proyek sekolah favoritmu...", opts:[
+      {t:"Eksperimen sains atau bikin alat", w:{sains:2}},
+      {t:"Presentasi, debat, atau karya tulis", w:{soshum:2}},
+      {t:"Poster, film pendek, atau desain", w:{seni:2}} ]},
+    { q:"Kalau lihat berita, kamu paling penasaran sama...", opts:[
+      {t:"Penemuan teknologi atau sains baru", w:{sains:2}},
+      {t:"Isu sosial, ekonomi, atau politik", w:{soshum:2}},
+      {t:"Tren desain, musik, atau film", w:{seni:2}} ]},
+    { q:"Cita-cita masa kecil kamu paling dekat ke...", opts:[
+      {t:"Dokter, insinyur, atau peneliti", w:{sains:2}},
+      {t:"Guru, pengacara, diplomat, atau pebisnis", w:{soshum:2}},
+      {t:"Seniman, desainer, musisi, atau atlet", w:{seni:2}} ]}
+  ];
+  let state, root;
+  function init(el){ root = el; state = { step:0, scores:{sains:0,soshum:0,seni:0}, kelas:'11' }; render(); }
+  function render(){
+    if(state.step < QUESTIONS.length){
+      const q = QUESTIONS[state.step];
+      root.innerHTML = `
+        <div class="theme-uni">
+          <div class="u-eyebrow"><span>Unischoolity</span><span>Pertanyaan ${state.step+1} / ${QUESTIONS.length}</span></div>
+          <div class="u-track"><div class="u-track-fill" style="width:${(state.step/QUESTIONS.length)*100}%"></div></div>
+          <div class="u-question">${q.q}</div>
+          <div>${q.opts.map((o,i)=>`<div class="u-option" onclick="UNI.answer(${i})"><div class="mark">${String.fromCharCode(65+i)}</div><div>${o.t}</div></div>`).join('')}</div>
+          ${state.step>0?`<button class="u-back" onclick="UNI.back()">← Kembali</button>`:''}
+        </div>`;
+    } else if(state.step === QUESTIONS.length){
+      root.innerHTML = `
+        <div class="theme-uni">
+          <div class="u-eyebrow"><span>Unischoolity</span><span>Langkah terakhir</span></div>
+          <div class="u-question" style="font-size:21px;">Kamu kelas berapa sekarang?</div>
+          <div class="u-kelas-row" id="u-kelas-group">
+            <div class="u-kelas ${state.kelas==='10'?'active':''}" onclick="UNI.setKelas(this,'10')">Kelas 10</div>
+            <div class="u-kelas ${state.kelas==='11'?'active':''}" onclick="UNI.setKelas(this,'11')">Kelas 11</div>
+            <div class="u-kelas ${state.kelas==='12'?'active':''}" onclick="UNI.setKelas(this,'12')">Kelas 12</div>
+          </div>
+          <button class="u-run" onclick="UNI.finish()">Lihat hasil rekomendasi</button>
+          <button class="u-back" onclick="UNI.back()">← Kembali</button>
+          <div class="loading" id="u-loading" style="color:#8b897d;">Menyusun rekomendasi berdasarkan 6 jawabanmu…</div>
+        </div>`;
+    }
+  }
+  function setKelas(btn, v){ state.kelas = v; document.querySelectorAll('#u-kelas-group .u-kelas').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function answer(i){ const w = QUESTIONS[state.step].opts[i].w; for(const k in w) state.scores[k]+=w[k]; state.step++; render(); }
+  function back(){ state.step = Math.max(0, state.step-1); render(); }
+  async function finish(){
+    const loading = document.getElementById('u-loading');
+    loading.className = 'loading show';
+    const total = state.scores.sains+state.scores.soshum+state.scores.seni || 1;
+    const pct = { sains: Math.round(state.scores.sains/total*100), soshum: Math.round(state.scores.soshum/total*100), seni: Math.round(state.scores.seni/total*100) };
+    try{
+      const sys = "Kamu konselor karir sekolah untuk siswa SMA Indonesia. Berdasarkan persentase kecenderungan siswa (sains/soshum/seni) dan kelasnya, balas HANYA dengan JSON valid tanpa teks lain, format persis: {\"ringkasan\":\"1-2 kalimat hangat menjelaskan kecenderungan siswa\",\"jurusan\":[{\"nama\":\"...\",\"alasan\":\"1 kalimat singkat\"}] (tepat 3 item),\"kampus\":[{\"nama\":\"...\",\"fakultas\":\"...\"}] (isi 2 item HANYA jika kelas 12, kalau bukan kelas 12 buat array kosong)}. Selalu ingatkan lewat kalimat ringkasan bahwa ini titik awal diskusi.";
+      const out = await callClaudeJSON(sys, `Sains ${pct.sains}%, Soshum ${pct.soshum}%, Seni/Vokasi ${pct.seni}%. Kelas: ${state.kelas}.`);
+      renderReport(pct, out);
+    }catch(e){ loading.textContent = "Gagal memuat rekomendasi. Coba lagi."; }
+  }
+  function renderReport(pct, out){
+    root.innerHTML = `
+      <div class="theme-uni">
+        <div class="u-eyebrow"><span>Unischoolity</span><span>Hasil kamu</span></div>
+        <div class="u-lede">"${out.ringkasan}"</div>
+        <div class="u-axis"><div class="u-axis-label"><span>Saintek</span><span>${pct.sains}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.sains}%"></div></div></div>
+        <div class="u-axis"><div class="u-axis-label"><span>Soshum</span><span>${pct.soshum}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.soshum}%"></div></div></div>
+        <div class="u-axis"><div class="u-axis-label"><span>Seni / Vokasi</span><span>${pct.seni}%</span></div><div class="u-axis-track"><div class="u-axis-fill" style="width:${pct.seni}%"></div></div></div>
+        <div class="u-kicker">Rekomendasi jurusan</div>
+        <div>${out.jurusan.map((j,i)=>`<div class="u-list-item"><div class="u-list-num">0${i+1}</div><div><h5>${j.nama}</h5><p>${j.alasan}</p></div></div>`).join('')}</div>
+        ${out.kampus && out.kampus.length ? `<div class="u-kicker">Contoh kampus (kelas 12)</div><div>${out.kampus.map((k,i)=>`<div class="u-list-item"><div class="u-list-num">0${i+1}</div><div><h5>${k.nama}</h5><p>${k.fakultas}</p></div></div>`).join('')}</div>` : ''}
+        <div class="u-note">Titik awal diskusi, bukan keputusan final — obrolkan lagi dengan guru BK atau orang tua.</div>
+        <button class="u-again" onclick="UNI.init(root)">↻ Ulangi tes</button>
+      </div>`;
+  }
+  return { init, answer, back, finish, setKelas };
+})();
+
+/* ============ LAB EKSPERIMEN ALAM — console theme ============ */
+const GAME = (function(){
+  let state, root;
+  function init(el){ root = el; state = { subject:'Fisika', level:'SMA', round:0, score:0, streak:0, current:null, answered:false }; renderStart(); }
+  function renderStart(){
+    root.innerHTML = `
+      <div class="theme-lab">
+        <div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>SYS.READY</span></div>
+        <div class="l-sub">5 ronde tantangan hipotesis. Pilih bidang & tingkat, lalu mulai.</div>
+        <div class="l-field-label">Bidang eksperimen</div>
+        <div class="l-toggle-row" id="l-subj-group">
+          <button class="l-toggle active" onclick="GAME.setSubject(this,'Fisika')">Fisika</button>
+          <button class="l-toggle" onclick="GAME.setSubject(this,'Kimia')">Kimia</button>
+          <button class="l-toggle" onclick="GAME.setSubject(this,'Biologi')">Biologi</button>
+        </div>
+        <div class="l-field-label">Tingkat</div>
+        <div class="l-toggle-row" id="l-lvl-group">
+          <button class="l-toggle" onclick="GAME.setLevel(this,'SMP')">SMP</button>
+          <button class="l-toggle active" onclick="GAME.setLevel(this,'SMA')">SMA</button>
+        </div>
+        <button class="l-run" onclick="GAME.start()">▶ mulai tantangan</button>
+        <div class="loading" id="l-loading" style="color:#5f9c8f;">Menyiapkan skenario eksperimen…</div>
+      </div>`;
+  }
+  function setSubject(btn,v){ state.subject=v; document.querySelectorAll('#l-subj-group .l-toggle').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  function setLevel(btn,v){ state.level=v; document.querySelectorAll('#l-lvl-group .l-toggle').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  async function start(){ state.round=0; state.score=0; state.streak=0; await nextRound(); }
+  async function nextRound(){
+    root.innerHTML = `<div class="theme-lab"><div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>LOADING</span></div><div class="loading show" style="color:#5f9c8f;">Menyiapkan skenario eksperimen…</div></div>`;
+    try{
+      const sys = "Kamu pembuat tantangan sains untuk game edukasi siswa Indonesia. Balas HANYA dengan JSON valid, format persis: {\"skenario\":\"2-3 kalimat deskripsi eksperimen yang seru\",\"opsi\":[{\"id\":\"a\",\"teks\":\"...\"},{\"id\":\"b\",\"teks\":\"...\"},{\"id\":\"c\",\"teks\":\"...\"}],\"benar\":\"a atau b atau c\",\"penjelasan\":\"2-3 kalimat penjelasan ilmiah kenapa itu jawabannya\"}. Jangan ulangi skenario yang mirip antar ronde.";
+      const out = await callClaudeJSON(sys, `Bidang: ${state.subject}\nJenjang: ${state.level}\nRonde ke: ${state.round+1}`);
+      state.current = out; state.answered = false;
+      renderRound();
+    }catch(e){ root.innerHTML = `<div class="theme-lab"><div class="l-top"><span>LAB_EKSPERIMEN_ALAM</span><span>ERROR</span></div><div style="color:#f0a19c; font-size:12.5px;">Gagal memuat tantangan.</div><button class="l-run" style="margin-top:14px;" onclick="GAME.nextRoundPublic()">coba lagi</button></div>`; }
+  }
+  function renderRound(){
+    const c = state.current;
+    root.innerHTML = `
+      <div class="theme-lab">
+        <div class="l-top"><span>${state.subject.toUpperCase()} · ${state.level}</span><span>ROUND ${state.round+1}/5</span></div>
+        <div class="l-hud"><div><b>${state.score}</b>SCORE</div><div><b>${state.streak}</b>STREAK</div></div>
+        <div class="l-scenario">${c.skenario}</div>
+        <div id="l-options">${c.opsi.map((o,i)=>`<button class="l-option" onclick="GAME.pick('${o.id}', this)">${String.fromCharCode(65+i)}) ${o.teks}</button>`).join('')}</div>
+        <div class="l-explain" id="l-explain" style="display:none;"></div>
+        <div id="l-next"></div>
+      </div>`;
+  }
+  function pick(id, btn){
+    if(state.answered) return;
+    state.answered = true;
+    const c = state.current;
+    const buttons = document.querySelectorAll('#l-options .l-option');
+    buttons.forEach(b=>b.disabled=true);
+    const correct = id === c.benar;
+    btn.classList.add(correct?'correct':'incorrect');
+    if(!correct){ buttons[c.opsi.findIndex(o=>o.id===c.benar)].classList.add('correct'); }
+    if(correct){ state.score += 10 + state.streak*2; state.streak++; } else { state.streak = 0; }
+    root.querySelector('.l-hud').innerHTML = `<div><b>${state.score}</b>SCORE</div><div><b>${state.streak}</b>STREAK</div>`;
+    const explain = document.getElementById('l-explain');
+    explain.textContent = c.penjelasan; explain.style.display = 'block';
+    state.round++;
+    const nextWrap = document.getElementById('l-next');
+    if(state.round < 5){ nextWrap.innerHTML = `<button class="l-run" onclick="GAME.nextRoundPublic()">▶ tantangan berikutnya</button>`; }
+    else { nextWrap.innerHTML = `<div class="l-final">SELESAI. SKOR AKHIR: ${state.score} POIN / 5 RONDE.</div><button class="l-again" onclick="GAME.init(root)">↻ main lagi</button>`; }
+  }
+  function nextRoundPublic(){ nextRound(); }
+  return { init, start, pick, setSubject, setLevel, nextRoundPublic };
+})();
+
+/* ============ A PEACE FROM HEART — calm journal theme ============ */
+const PEACE = (function(){
+  const MOODS = ["Berat banget","Nggak stabil","Biasa aja","Cukup baik","Baik"];
+  const TAGS = ["Cemas","Lelah","Kesepian","Marah","Bingung","Sedih","Tertekan sekolah","Masalah keluarga","Masalah pertemanan"];
+  let state, root;
+  function init(el){ root = el; state = { mood:null, tags:[] }; render(); }
+  function render(){
+    root.innerHTML = `
+      <div class="theme-peace">
+        <div class="p-eyebrow">A Peace From Heart</div>
+        <div class="p-disclaimer">Ini bukan pengganti bantuan profesional, dan tidak ada percakapan yang disimpan. Kalau bebanmu terasa berat, bicaralah dengan orang tua, guru, atau konselor sekolah.</div>
+        <div class="p-q">Secara umum, gimana perasaanmu hari ini?</div>
+        <div class="p-mood-row" id="p-mood-row">${MOODS.map((m,i)=>`<button class="p-mood" onclick="PEACE.pickMood(${i}, this)">${m}</button>`).join('')}</div>
+        <div class="p-q" style="font-size:15.5px;">Ada rasa yang lebih spesifik? (opsional)</div>
+        <div class="p-tag-row" id="p-tag-wrap">${TAGS.map(t=>`<button class="p-tag" onclick="PEACE.toggleTag('${t}', this)">${t}</button>`).join('')}</div>
+        <textarea class="p-textarea" id="p-text" placeholder="Ingin cerita lebih lanjut? tulis di sini…" rows="2"></textarea>
+        <div class="p-err" id="p-err" style="display:none;">Pilih mood dulu, atau tulis sesuatu sebelum kirim.</div>
+        <button class="p-send" onclick="PEACE.submit()">Kirim ke ruang refleksi</button>
+        <div class="loading" id="p-loading" style="color:#8f7a80; text-align:center;">Menyusun refleksi dengan hati-hati…</div>
+      </div>`;
+  }
+  function pickMood(i, btn){ state.mood = i; document.querySelectorAll('#p-mood-row .p-mood').forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); }
+  function toggleTag(t, btn){ const idx = state.tags.indexOf(t); if(idx>-1){ state.tags.splice(idx,1); btn.classList.remove('selected'); } else { state.tags.push(t); btn.classList.add('selected'); } }
+  async function submit(){
+    const text = document.getElementById('p-text').value.trim();
+    const err = document.getElementById('p-err');
+    if(state.mood===null && !text){ err.style.display='block'; return; }
+    err.style.display='none';
+    const loading = document.getElementById('p-loading');
+    loading.className = 'loading show';
+    try{
+      const sys = "Kamu teman menulis reflektif untuk remaja Indonesia — BUKAN terapis, BUKAN konselor, BUKAN layanan krisis, dan tidak memberi diagnosis atau nasihat klinis. Balas dengan 3-4 kalimat: 1-2 kalimat validasi perasaan yang hangat dan tidak menghakimi, lalu satu pertanyaan reflektif terbuka. Jika teks menunjukkan tanda krisis atau keinginan menyakiti diri, jangan coba menangani sendiri — dorong dengan jelas dan segera untuk bicara dengan orang dewasa tepercaya, guru BK, atau layanan bantuan profesional. Bahasa Indonesia, tenang, singkat.";
+      const userMsg = `Mood: ${state.mood!==null ? MOODS[state.mood] : '(tidak memilih)'}\nRasa yang dipilih: ${state.tags.join(', ') || '(tidak memilih tag)'}\nCerita tambahan: ${text || '(tidak menulis apa-apa)'}`;
+      const response = await fetch("https://api.anthropic.com/v1/messages", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({ model:"claude-sonnet-4-6", max_tokens:400, system: sys, messages:[{role:"user", content: userMsg}] }) });
+      const data = await response.json();
+      const out = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n') || "Terima kasih sudah mau berbagi. Apa satu hal kecil yang bisa bikin hari ini terasa sedikit lebih ringan?";
+      renderResult(out);
+    }catch(e){ loading.textContent = "Gagal memuat refleksi. Coba lagi."; }
+  }
+  function renderResult(out){
+    root.innerHTML = `
+      <div class="theme-peace">
+        <div class="p-eyebrow">A Peace From Heart</div>
+        <div class="p-reflection">"${out}"</div>
+        <div class="p-closing">Tarik napas pelan tiga kali sebelum lanjut ke aktivitasmu.</div>
+        <div class="p-closing">Kalau perasaan ini terasa berat atau terus-menerus, bicara dengan orang tua, guru, atau konselor sekolah tetap langkah terbaik.</div>
+        <button class="p-again" onclick="PEACE.init(root)">↻ Tulis lagi</button>
+      </div>`;
+  }
+  return { init, pickMood, toggleTag, submit };
+})();
+
+renderTiles();
+</script>
 </body>
 </html>
